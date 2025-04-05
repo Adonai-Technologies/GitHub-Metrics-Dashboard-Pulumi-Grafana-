@@ -76,3 +76,123 @@ MIT License. See `LICENSE` for details.
 ---
 🚀 **Built for the Get Creative with Pulumi and GitHub Challenge!**
 
+
+## 🛠️ Step-by-Step Guide for building your own Github Metrics Dashboard
+
+### 1. 🌱 Setup Your Project Environment
+
+```bash
+# Create a new directory
+mkdir github-metrics-dashboard && cd github-metrics-dashboard
+
+# Initialize a new Pulumi project with TypeScript
+pulumi new typescript
+
+# Install dependencies
+npm install @pulumi/pulumi @pulumi/github @pulumi/docker express body-parser
+
+
+✅ Make sure you’ve authenticated Pulumi with your cloud and GitHub accounts
+
+2. 🔐 Configure Pulumi Secrets (Optional but Recommended)
+pulumi config set github:token <your_github_token> --secret
+Use a GitHub personal access token with appropriate scopes (repo, admin:repo_hook).
+
+
+3. ⚙️ Pulumi GitHub Provider Setup
+Edit index.ts:
+
+import * as github from "@pulumi/github";
+
+// Create a webhook to capture GitHub events
+const repoWebhook = new github.RepositoryWebhook("webhook", {
+  repository: "your-repo-name",
+  configuration: {
+    url: "http://your-webhook-server.com/events",
+    contentType: "json",
+    insecureSsl: false,
+    secret: "your-secret",
+  },
+  events: ["push", "issues", "pull_request"],
+});
+
+Replace "your-repo-name" and webhook URL with your actual values.
+
+4. 🚀 Build the Webhook Receiver
+Create webhook-server.ts:
+
+import express from "express";
+import bodyParser from "body-parser";
+
+const app = express();
+app.use(bodyParser.json());
+
+app.post("/events", (req, res) => {
+  const event = req.headers["x-github-event"];
+  console.log(`Received GitHub event: ${event}`, req.body);
+  // Save or process the event for Grafana here
+  res.sendStatus(200);
+});
+
+app.listen(3000, () => console.log("Webhook server running on http://localhost:3000"));
+
+Run it with: npx ts-node webhook-server.ts
+
+5. 📊 Set Up Grafana Dashboard
+Run Grafana locally using Docker:
+docker run -d -p 3001:3000 --name=grafana grafana/grafana
+
+Access Grafana at: http://localhost:3001
+Default login: admin / admin
+
+In Grafana:
+
+Add a JSON or file-based data source (or mock one for now)
+
+Build panels for metrics like:
+
+Pull requests over time
+
+Issues opened/closed
+
+Push frequency
+
+Top contributors
+
+
+
+6. 🤖 Automate Deployment with Pulumi Automation API
+Create run.ts:
+
+import * as pulumi from "@pulumi/pulumi/x/automation";
+import * as path from "path";
+
+(async () => {
+  const projectName = "github-metrics-dashboard";
+  const stackName = "dev";
+
+  const args = {
+    stackName,
+    projectName,
+    program: async () => require("./index"),
+  };
+
+  const stack = await pulumi.LocalWorkspace.createOrSelectStack(args);
+  console.log("Running Pulumi up...");
+  await stack.up();
+})();
+
+Run it with: npx ts-node run.ts
+
+7. 🧪 Test It Out
+Push to your GitHub repo
+
+Watch your webhook server log the event
+
+Confirm Grafana reflects incoming metrics
+
+
+🧼 Clean Up
+
+pulumi destroy
+docker stop grafana && docker rm grafana

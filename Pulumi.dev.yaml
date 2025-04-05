@@ -3,3 +3,4 @@ config:
     secure: AAABALea4KEAd8UmhO6bj72i1fzbIvJnyBIVxunuYjaLm/q3HNC9XjrOzzhqUUcimfS8UE9k2ADBzmALH3XqZEJ2zQ9cqB19
   github-metrics-dashboard:webhookSecret:
     secure: AAABAAKLPiJJVMO7Qtt45seYZgfVTbMm7xOfa54Qyd4r4/agc75uSeqpcKgU7StD8+QIcgA/W+7eFDlNRGUUSp+STpcw1msd8I0K7BYMYScL8FuAzc/Y1P93GAWR2klW
+  kubernetes:context: ""
